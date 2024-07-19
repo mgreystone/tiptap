@@ -1,5 +1,6 @@
 import './styles.scss'
 
+import { Extension } from '@tiptap/core'
 import Document from '@tiptap/extension-document'
 import Placeholder from '@tiptap/extension-placeholder'
 import { EditorContent, useEditor } from '@tiptap/react'
@@ -7,7 +8,7 @@ import StarterKit from '@tiptap/starter-kit'
 import React from 'react'
 
 const CustomDocument = Document.extend({
-  content: 'heading block*',
+  content: 'heading block',
 })
 
 export default () => {
@@ -24,6 +25,16 @@ export default () => {
           }
 
           return 'Can you add some further context?'
+        },
+      }),
+      Extension.create({
+        addKeyboardShortcuts() {
+          return {
+            Enter: () => this.editor.commands.first(({ commands }) => [
+              () => commands.splitBlock(),
+              () => (console.log('success! splitBlock returned false'), false),
+            ]),
+          }
         },
       }),
     ],
