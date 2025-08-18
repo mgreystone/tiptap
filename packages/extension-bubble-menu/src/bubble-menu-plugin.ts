@@ -29,6 +29,8 @@ function combineDOMRects(rect1: DOMRect, rect2: DOMRect): DOMRect {
   return new DOMRect(x, y, width, height)
 }
 
+type AppendTo = HTMLElement | (() => HTMLElement | undefined) | undefined
+
 export interface BubbleMenuPluginProps {
   /**
    * The plugin key.
@@ -86,10 +88,10 @@ export interface BubbleMenuPluginProps {
    *
    * Sometimes the menu needs to be appended to a different DOM context due to accessibility, clipping, or z-index issues.
    *
-   * @type {HTMLElement}
+   * @type {AppendTo}
    * @default null
    */
-  appendTo?: HTMLElement
+  appendTo?: AppendTo
 
   /**
    * The options for the bubble menu. Those are passed to Floating UI and include options for the placement, offset, flip, shift, arrow, size, autoPlacement,
@@ -145,7 +147,7 @@ export class BubbleMenuView implements PluginView {
 
   public resizeDelay: number
 
-  public appendTo: HTMLElement | undefined
+  public appendTo: AppendTo
 
   private updateDebounceTimer: number | undefined
 
@@ -479,8 +481,11 @@ export class BubbleMenuView implements PluginView {
 
     this.element.style.visibility = 'visible'
     this.element.style.opacity = '1'
+
     // attach to appendTo or editor's parent element
-    ;(this.appendTo ?? this.view.dom.parentElement)?.appendChild(this.element)
+    const parentElement =
+      (typeof this.appendTo === 'function' ? this.appendTo() : this.appendTo) ?? this.view.dom.parentElement
+    parentElement?.appendChild(this.element)
 
     if (this.floatingUIOptions.onShow) {
       this.floatingUIOptions.onShow()

@@ -5,15 +5,31 @@ import { createPortal } from 'react-dom'
 
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>
 
-export type BubbleMenuProps = Optional<Omit<Optional<BubbleMenuPluginProps, 'pluginKey'>, 'element'>, 'editor'> &
-  React.HTMLAttributes<HTMLDivElement>
+export type BubbleMenuProps = Optional<
+  Omit<Optional<BubbleMenuPluginProps, 'pluginKey'>, 'element' | 'appendTo'>,
+  'editor'
+> &
+  React.HTMLAttributes<HTMLDivElement> & { appendTo?: HTMLElement }
 
 export const BubbleMenu = React.forwardRef<HTMLDivElement, BubbleMenuProps>(
   (
-    { pluginKey = 'bubbleMenu', editor, updateDelay, resizeDelay, shouldShow = null, options, children, ...restProps },
+    {
+      pluginKey = 'bubbleMenu',
+      editor,
+      updateDelay,
+      resizeDelay,
+      shouldShow = null,
+      options,
+      children,
+      appendTo,
+      ...restProps
+    },
     ref,
   ) => {
     const menuEl = useRef(document.createElement('div'))
+
+    const appendToEl = useRef(appendTo)
+    appendToEl.current = appendTo
 
     if (typeof ref === 'function') {
       ref(menuEl.current)
@@ -22,6 +38,7 @@ export const BubbleMenu = React.forwardRef<HTMLDivElement, BubbleMenuProps>(
     }
 
     const { editor: currentEditor } = useCurrentEditor()
+    const pluginRef = useRef<ReturnType<typeof BubbleMenuPlugin> | null>(null)
 
     useEffect(() => {
       const bubbleMenuElement = menuEl.current
@@ -48,8 +65,12 @@ export const BubbleMenu = React.forwardRef<HTMLDivElement, BubbleMenuProps>(
         pluginKey,
         shouldShow,
         options,
+        appendTo() {
+          return appendToEl.current
+        },
       })
 
+      pluginRef.current = plugin
       attachToEditor.registerPlugin(plugin)
 
       return () => {
